@@ -17,6 +17,18 @@ public class TestSuite implements TestSuiteIntf {
             executeTestCase(testCaseContent.getInput(), testCaseContent.getExpectedOutput(), testCase);
         }        
     }
+
+    // trace test suite content to stream
+    public void dump(compiler.InputReader testCaseSequence, OutputStreamWriter outStream) throws Exception {
+        // parse test content
+        java.util.Vector<test.TestCaseContent> testCaseContentArr = parseTestSuite(testCaseSequence);
+
+        // trace all test cases
+        for (test.TestCaseContent testCaseContent : testCaseContentArr) {
+            testCaseContent.toStream(outStream);
+        }
+        outStream.flush();
+    }
     
     @Override
     public void executeTestCase(String input, String expectedOutput, TestCaseIntf testCase) throws Exception {
@@ -56,20 +68,23 @@ public class TestSuite implements TestSuiteIntf {
     }
 
     private test.TestCaseContent parseTestCase(compiler.InputReader inputReader) throws Exception {
-        String input = new String();
-        String expectedOutput = new String();
-        return new TestCaseContent(input, expectedOutput);
+        return new TestCaseContent(parseInput(inputReader), parseExpectedOutput(inputReader));
     }
 
     private void parseDollarIn(compiler.InputReader inputReader) throws Exception {
-	inputReader.expect('$');
-	inputReader.expect('I');
-	inputReader.expect('N');
-	inputReader.expect('\n');
+		inputReader.expect('$');
+		inputReader.expect('I');
+		inputReader.expect('N');
+		inputReader.expect('\n');
     }
 
     private String parseInput(compiler.InputReader inputReader) throws Exception {
+        parseDollarIn(inputReader);
         String input = new String();
+        while (inputReader.lookAheadChar() != '$' && inputReader.lookAheadChar() != 0) {
+            input += inputReader.lookAheadChar();
+            inputReader.advance();
+        }
         return input;
     }
 
@@ -82,7 +97,12 @@ public class TestSuite implements TestSuiteIntf {
     }
     
     private String parseExpectedOutput(compiler.InputReader inputReader) throws Exception {
+        parseDollarOut(inputReader);
         String expectedOutput = new String();
+        while (inputReader.lookAheadChar() != '$' && inputReader.lookAheadChar() != 0) {
+            expectedOutput += inputReader.lookAheadChar();
+            inputReader.advance();
+        }
         return expectedOutput;
     }
 
